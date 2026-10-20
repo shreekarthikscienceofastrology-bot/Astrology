@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import type { Product } from '@/lib/productStore'
+import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 
 const emptyProduct = {
   id: '',
@@ -79,16 +80,49 @@ export default function AdminProductsPage() {
     setStatus('Uploading product image...')
 
     try {
-      const body = new FormData()
-      body.set('image', file)
-      const response = await fetch('/api/admin/product-image', { method: 'POST', body })
-      const payload = await response.json()
+      const supabase = getSupabaseBrowserClient()
+      let imageUrl: string
 
-      if (!response.ok) {
-        throw new Error(payload.error || 'Unable to upload product image.')
+      if (supabase) {
+        const response = await fetch('/api/admin/product-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contentType: file.type }),
+        })
+        const payload = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(payload.error || `Unable to prepare image upload (${response.status}).`)
+        }
+
+        const { error } = await supabase.storage
+          .from('product-images')
+          .uploadToSignedUrl(payload.path, payload.token, file, { contentType: file.type })
+
+        if (error) throw new Error(`Image upload failed: ${error.message}`)
+        imageUrl = payload.url
+      } else {
+        const body = new FormData()
+        body.set('image', file)
+        const response = await fetch('/api/admin/product-image', { method: 'POST', body })
+        const responseText = await response.text()
+        let payload: { url?: string; error?: string } = {}
+
+        try {
+          payload = JSON.parse(responseText) as typeof payload
+        } catch {
+          throw new Error(`Image upload failed (${response.status}): ${responseText.slice(0, 180)}`)
+        }
+
+        if (!response.ok) {
+          throw new Error(payload.error || `Unable to upload product image (${response.status}).`)
+        }
+
+        imageUrl = payload.url || ''
       }
 
-      updateForm('image', payload.url)
+      if (!imageUrl) throw new Error('Image upload completed without returning an image URL.')
+      updateForm('image', imageUrl)
       setStatus('Image uploaded. Complete the product details and save.')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Unable to upload product image.')
@@ -119,9 +153,16 @@ export default function AdminProductsPage() {
         body: JSON.stringify(payload),
       })
 
-      const data = await response.json()
+      const responseText = await response.text()
+      let data: { error?: string } = {}
+      try {
+        data = responseText ? JSON.parse(responseText) as typeof data : {}
+      } catch {
+        throw new Error(`Unable to save product (${response.status}): ${responseText.slice(0, 180) || response.statusText}`)
+      }
+
       if (!response.ok) {
-        throw new Error(data.error || 'Unable to save product.')
+        throw new Error(data.error || `Unable to save product (${response.status}).`)
       }
 
       resetForm()
@@ -136,14 +177,26 @@ export default function AdminProductsPage() {
 
   async function handleDelete(id: string) {
     setStatus('')
-    const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-    if (!response.ok) {
-      setStatus('Unable to delete product.')
-      return
+    try {
+      const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      const responseText = await response.text()
+      let payload: { error?: string } = {}
+      try {
+        payload = responseText ? JSON.parse(responseText) as typeof payload : {}
+      } catch {
+        throw new Error(`Unable to delete product (${response.status}): ${responseText.slice(0, 180) || response.statusText}`)
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error || `Unable to delete product (${response.status}).`)
+      }
+
+      setStatus('Product deleted successfully.')
+      setForm(emptyProduct)
+      await loadProducts()
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to delete product.')
     }
-    setStatus('Product deleted successfully.')
-    setForm(emptyProduct)
-    await loadProducts()
   }
 
   function handleEdit(product: Product) {

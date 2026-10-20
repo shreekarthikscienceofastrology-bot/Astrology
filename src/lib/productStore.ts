@@ -29,7 +29,7 @@ const defaultProducts: Product[] = [
     price: 28500,
     stock: 6,
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=1200&q=80',
+    image: '/images/gemstones/ruby.jpg',
     specifications: ['Natural ruby', 'Fine cut', 'Certified quality', 'Suitable for astrological use'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -42,7 +42,7 @@ const defaultProducts: Product[] = [
     price: 18500,
     stock: 8,
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1200&q=80',
+    image: '/images/gemstones/pearl.jpg',
     specifications: ['Natural freshwater pearl', 'Polished finish', 'Elegant shine', 'Comfortable for daily wear'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -55,7 +55,7 @@ const defaultProducts: Product[] = [
     price: 32000,
     stock: 4,
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=1200&q=80',
+    image: '/images/gemstones/emerald.jpg',
     specifications: ['Vivid green tone', 'Premium cut', 'High clarity', 'Astrological gemstone'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -68,7 +68,7 @@ const defaultProducts: Product[] = [
     price: 42000,
     stock: 3,
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=80',
+    image: '/images/gemstones/yellow-sapphire.jpg',
     specifications: ['Natural yellow sapphire', 'Rich golden shade', 'Premium finish', 'Recommended for Jupiter'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -81,7 +81,7 @@ const defaultProducts: Product[] = [
     price: 52000,
     stock: 2,
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab534?auto=format&fit=crop&w=1200&q=80',
+    image: '/images/gemstones/blue-sapphire.jpg',
     specifications: ['Deep blue hue', 'Excellent brilliance', 'strong astrological value', 'Carefully selected stone'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -94,7 +94,7 @@ const defaultProducts: Product[] = [
     price: 61000,
     stock: 1,
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1200&q=80',
+    image: '/images/gemstones/diamond.jpg',
     specifications: ['High clarity diamond', 'Precision cut', 'Classic brilliance', 'Premium luxury choice'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -109,9 +109,21 @@ export async function readProducts(): Promise<Product[]> {
     if (error) throw new Error(`Unable to read products from Supabase: ${error.message}`)
 
     if (data.length > 0) {
-      return data
-        .map((row) => row.payload as Product)
+      const originalProducts = data.map((row) => row.payload as Product)
+      const products = originalProducts
+        .map(normalizeProductImage)
         .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt))
+
+      const originalImages = new Map(originalProducts.map((product) => [product.id, product.image]))
+      const correctedProducts = products.filter((product) => product.image !== originalImages.get(product.id))
+      if (correctedProducts.length > 0) {
+        const { error: correctionError } = await supabase.from('products').upsert(
+          correctedProducts.map((product) => ({ id: product.id, payload: product, created_at: product.createdAt })),
+        )
+        if (correctionError) throw new Error(`Unable to update legacy product images: ${correctionError.message}`)
+      }
+
+      return products
     }
 
     const legacyProducts = await readProductsFromJson()
@@ -126,12 +138,29 @@ async function readProductsFromJson(): Promise<Product[]> {
   try {
     const content = await fs.readFile(productPath, 'utf8')
     const parsed = JSON.parse(content) as Product[]
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultProducts
+    return (Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultProducts).map(normalizeProductImage)
   } catch {
     await fs.mkdir(path.dirname(productPath), { recursive: true })
     await fs.writeFile(productPath, `${JSON.stringify(defaultProducts, null, 2)}\n`, 'utf8')
     return defaultProducts
   }
+}
+
+function normalizeProductImage(product: Product): Product {
+  const localImages: Record<string, string> = {
+    'ruby-gemstone': '/images/gemstones/ruby.jpg',
+    'pearl-gemstone': '/images/gemstones/pearl.jpg',
+    'emerald-gemstone': '/images/gemstones/emerald.jpg',
+    'yellow-sapphire': '/images/gemstones/yellow-sapphire.jpg',
+    'blue-sapphire': '/images/gemstones/blue-sapphire.jpg',
+    'diamond-gemstone': '/images/gemstones/diamond.jpg',
+  }
+
+  if (product.image.includes('photo-1617038220319-276d3cfab534')) {
+    return { ...product, image: localImages[product.id] || '/images/gemstones/ruby.jpg' }
+  }
+
+  return product
 }
 
 export async function writeProducts(products: Product[]) {
