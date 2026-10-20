@@ -21,6 +21,8 @@ export default function Header() {
             className="text-[#8a5e00] md:hidden"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
+            aria-expanded={isOpen}
+            aria-controls="mobile-navigation"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -36,11 +38,11 @@ export default function Header() {
         </div>
 
         {isOpen && (
-          <div className="mt-4 space-y-4 pb-2 text-slate-700 md:hidden">
-            <Link href="/" className="block transition hover:text-[#8a5e00]">Home</Link>
-            <Link href="#about" className="block transition hover:text-[#8a5e00]">About</Link>
-            <Link href="/products" className="block transition hover:text-[#8a5e00]">Products</Link>
-            <Link href="#contact" className="block transition hover:text-[#8a5e00]">Contact</Link>
+          <div id="mobile-navigation" className="mt-4 space-y-4 pb-2 text-slate-700 md:hidden">
+            <Link href="/" onClick={() => setIsOpen(false)} className="block transition hover:text-[#8a5e00]">Home</Link>
+            <Link href="#about" onClick={() => setIsOpen(false)} className="block transition hover:text-[#8a5e00]">About</Link>
+            <Link href="/products" onClick={() => setIsOpen(false)} className="block transition hover:text-[#8a5e00]">Products</Link>
+            <Link href="#contact" onClick={() => setIsOpen(false)} className="block transition hover:text-[#8a5e00]">Contact</Link>
           </div>
         )}
       </nav>
