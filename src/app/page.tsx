@@ -369,7 +369,7 @@ export default function Home() {
             <a href="mailto:info@karthikastrology.com" className="card-glass p-6 rounded-lg text-center hover:shadow-xl transition-shadow">
               <p className="text-4xl mb-4">📧</p>
               <h3 className="text-xl font-semibold text-gold mb-2">Email</h3>
-              <p className="text-gray-300">info@karthikastrology.com</p>
+              <p className="text-gray-300">shreekarthikscienceofastrology@gmail.com</p>
             </a>
             <a href="https://wa.me/919655375550?text=Hello%20Shree%20Karthik%20Science%20of%20Astrology" target="_blank" rel="noopener noreferrer" className="card-glass p-6 rounded-lg text-center hover:shadow-xl transition-shadow">
               <p className="text-4xl mb-4">📱</p>

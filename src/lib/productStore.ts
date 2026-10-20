@@ -20,85 +20,14 @@ export interface Product {
 
 const productPath = path.join(process.cwd(), 'data', 'products.json')
 
-const defaultProducts: Product[] = [
-  {
-    id: 'ruby-gemstone',
-    name: 'Ruby Gemstone',
-    category: 'Ruby',
-    description: 'Premium natural ruby gemstone with vivid red brilliance and powerful energy.',
-    price: 28500,
-    stock: 6,
-    status: 'Available',
-    image: '/images/gemstones/ruby.jpg',
-    specifications: ['Natural ruby', 'Fine cut', 'Certified quality', 'Suitable for astrological use'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'pearl-gemstone',
-    name: 'Pearl Gemstone',
-    category: 'Pearl',
-    description: 'Lustrous pearl gemstone known for calming energy and emotional balance.',
-    price: 18500,
-    stock: 8,
-    status: 'Available',
-    image: '/images/gemstones/pearl.jpg',
-    specifications: ['Natural freshwater pearl', 'Polished finish', 'Elegant shine', 'Comfortable for daily wear'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'emerald-gemstone',
-    name: 'Emerald Gemstone',
-    category: 'Emerald',
-    description: 'Elegant emerald gemstone that enhances communication, wisdom, and clarity.',
-    price: 32000,
-    stock: 4,
-    status: 'Available',
-    image: '/images/gemstones/emerald.jpg',
-    specifications: ['Vivid green tone', 'Premium cut', 'High clarity', 'Astrological gemstone'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'yellow-sapphire',
-    name: 'Yellow Sapphire',
-    category: 'Yellow Sapphire',
-    description: 'Bright yellow sapphire prized for prosperity, wisdom, and positive fortune.',
-    price: 42000,
-    stock: 3,
-    status: 'Available',
-    image: '/images/gemstones/yellow-sapphire.jpg',
-    specifications: ['Natural yellow sapphire', 'Rich golden shade', 'Premium finish', 'Recommended for Jupiter'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'blue-sapphire',
-    name: 'Blue Sapphire',
-    category: 'Blue Sapphire',
-    description: 'Rare blue sapphire gemstone with a premium royal blue finish and powerful energy.',
-    price: 52000,
-    stock: 2,
-    status: 'Available',
-    image: '/images/gemstones/blue-sapphire.jpg',
-    specifications: ['Deep blue hue', 'Excellent brilliance', 'strong astrological value', 'Carefully selected stone'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'diamond-gemstone',
-    name: 'Diamond Gemstone',
-    category: 'Diamond',
-    description: 'Sparkling diamond gemstone celebrated for luxury, elegance, and prosperity.',
-    price: 61000,
-    stock: 1,
-    status: 'Available',
-    image: '/images/gemstones/diamond.jpg',
-    specifications: ['High clarity diamond', 'Precision cut', 'Classic brilliance', 'Premium luxury choice'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
+const defaultProducts: Product[] = []
+const demoProductIds = [
+  'ruby-gemstone',
+  'pearl-gemstone',
+  'emerald-gemstone',
+  'yellow-sapphire',
+  'blue-sapphire',
+  'diamond-gemstone',
 ]
 
 export async function readProducts(): Promise<Product[]> {
@@ -108,8 +37,19 @@ export async function readProducts(): Promise<Product[]> {
     const { data, error } = await supabase.from('products').select('id,payload').order('created_at')
     if (error) throw new Error(`Unable to read products from Supabase: ${error.message}`)
 
-    if (data.length > 0) {
-      const originalProducts = data.map((row) => row.payload as Product)
+    const seededIdsInDatabase = data
+      .map((row) => row.id)
+      .filter((id) => demoProductIds.includes(id))
+
+    if (seededIdsInDatabase.length > 0) {
+      const { error: cleanupError } = await supabase.from('products').delete().in('id', seededIdsInDatabase)
+      if (cleanupError) throw new Error(`Unable to remove seeded demo products: ${cleanupError.message}`)
+    }
+
+    const actualProducts = data.filter((row) => !demoProductIds.includes(row.id))
+
+    if (actualProducts.length > 0) {
+      const originalProducts = actualProducts.map((row) => row.payload as Product)
       const products = originalProducts
         .map(normalizeProductImage)
         .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt))
