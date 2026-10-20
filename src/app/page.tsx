@@ -4,6 +4,7 @@ import MonthlyPrediction from '@/components/MonthlyPrediction'
 import AstrologyClock from '@/components/AstrologyClock'
 import Image from 'next/image'
 import logo from '@/logo.png'
+import { getConsultationWhatsAppLink } from '@/lib/siteConfig'
 
 export default function Home() {
   return (
@@ -30,7 +31,7 @@ export default function Home() {
             Unlock the mysteries of the cosmos and discover your true path. Our expert astrologers combine ancient wisdom with modern understanding to guide you toward a better future.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#contact" className="btn-gold inline-flex items-center justify-center">Book Consultation</a>
+            <a href={getConsultationWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center justify-center">Book Consultation</a>
             <a href="#about" className="btn-outline inline-flex items-center justify-center">Learn More</a>
           </div>
           
