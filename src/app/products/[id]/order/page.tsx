@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import type { Product } from '@/lib/productStore'
+import { getOrderWhatsAppLink } from '@/lib/siteConfig'
 
 export default function ProductOrderPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -13,6 +14,8 @@ export default function ProductOrderPage({ params }: { params: { id: string } })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [emailWarning, setEmailWarning] = useState('')
+  const [whatsAppLink, setWhatsAppLink] = useState('')
   const [form, setForm] = useState({
     customerName: '',
     phone: '',
@@ -48,6 +51,8 @@ export default function ProductOrderPage({ params }: { params: { id: string } })
     setSubmitting(true)
     setError('')
     setSuccess('')
+    setEmailWarning('')
+    setWhatsAppLink('')
 
     try {
       const response = await fetch('/api/orders', {
@@ -67,15 +72,14 @@ export default function ProductOrderPage({ params }: { params: { id: string } })
         throw new Error(payload.error || 'Unable to place order.')
       }
 
-      setSuccess('Your order has been placed successfully. Our team will contact you soon.')
-      setForm({
-        customerName: '',
-        phone: '',
-        email: '',
-        address: '',
-        quantity: 1,
-        message: '',
-      })
+      const order = payload.order
+      setSuccess(`Order ${order.id} was placed successfully.`)
+      setEmailWarning(
+        payload.notification?.emailSent
+          ? 'An order notification was emailed to the shop.'
+          : 'The order is saved, but shop email notifications are not configured or could not be sent. You can send the order details on WhatsApp below.',
+      )
+      setWhatsAppLink(getOrderWhatsAppLink(order))
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to place order.')
     } finally {
@@ -205,11 +209,26 @@ export default function ProductOrderPage({ params }: { params: { id: string } })
             </div>
 
             {error && <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-            {success && <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</p>}
+            {success && (
+              <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <p>{success}</p>
+                <p>{emailWarning}</p>
+                {whatsAppLink && (
+                  <a
+                    href={whatsAppLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-lg bg-[#25D366] px-4 py-2 font-semibold text-white transition hover:bg-[#1ebe5d]"
+                  >
+                    Send order details on WhatsApp
+                  </a>
+                )}
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={submitting || product.stock <= 0}
+              disabled={submitting || product.stock <= 0 || Boolean(success)}
               className="inline-flex w-full items-center justify-center rounded-lg bg-gold px-5 py-3 text-base font-semibold text-[#1f1b13] transition-all duration-300 hover:bg-[#d4a900] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
               {submitting ? 'Placing Order...' : product.stock <= 0 ? 'Out of Stock' : 'Submit Order'}

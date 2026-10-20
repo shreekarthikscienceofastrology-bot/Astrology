@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
 
 import { isAdminAuthenticated } from '@/lib/adminAuth'
 import { Order, readOrders, writeOrders } from '@/lib/orderStore'
@@ -15,7 +16,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const payload = await request.json()
-  const { productId, productName, productPrice, customerName, phone, email, address, quantity, message } = payload
+  const { productId, customerName, phone, email, address, quantity, message } = payload
 
   if (!productId || !customerName || !phone || !email || !address) {
     return NextResponse.json({ error: 'Please complete all required order details.' }, { status: 400 })
@@ -41,24 +42,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Requested quantity exceeds available stock.' }, { status: 400 })
   }
 
-  const validPrice = Number(productPrice || product.price)
-  if (!Number.isFinite(validPrice) || validPrice <= 0) {
-    return NextResponse.json({ error: 'Invalid product price.' }, { status: 400 })
-  }
-
   const orders = await readOrders()
   const newOrder: Order = {
     id: `${Date.now()}-${String(customerName).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
     productId: product.id,
-    productName: productName || product.name,
-    productPrice: validPrice,
+    productName: product.name,
+    productPrice: product.price,
     customerName: String(customerName).trim(),
     phone: String(phone).trim(),
     email: String(email).trim(),
     address: String(address).trim(),
     quantity: numericQuantity,
     message: message ? String(message).trim() : '',
-    totalPrice: validPrice * numericQuantity,
+    totalPrice: product.price * numericQuantity,
     status: 'Pending',
     createdAt: new Date().toISOString(),
   }
@@ -81,7 +77,59 @@ export async function POST(request: Request) {
 
   await writeProducts(updatedProducts)
 
-  return NextResponse.json(newOrder)
+  const smtpUser = process.env.SMTP_USER
+  const smtpAppPassword = process.env.SMTP_APP_PASSWORD
+  const notificationEmail = process.env.ORDER_NOTIFICATION_EMAIL || smtpUser
+  const fromName = process.env.MAIL_FROM_NAME || 'Shree Karthik Astrology'
+  let emailSent = false
+
+  if (smtpUser && smtpAppPassword && notificationEmail) {
+    const emailText = [
+      'A new gemstone order was submitted.',
+      `Order ID: ${newOrder.id}`,
+      `Product: ${newOrder.productName}`,
+      `Unit price: INR ${newOrder.productPrice.toLocaleString('en-IN')}`,
+      `Quantity: ${newOrder.quantity}`,
+      `Total: INR ${newOrder.totalPrice.toLocaleString('en-IN')}`,
+      '',
+      `Customer name: ${newOrder.customerName}`,
+      `Phone: ${newOrder.phone}`,
+      `Email: ${newOrder.email}`,
+      `Delivery address: ${newOrder.address}`,
+      `Customer message: ${newOrder.message || 'None'}`,
+    ].join('\n')
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: smtpUser,
+          pass: smtpAppPassword.replace(/\s/g, ''),
+        },
+      })
+
+      await transporter.sendMail({
+        from: { name: fromName, address: smtpUser },
+        to: notificationEmail,
+        replyTo: newOrder.email,
+        subject: `New gemstone order: ${newOrder.productName}`,
+        text: emailText,
+      })
+      emailSent = true
+    } catch (error) {
+      console.error('Order email delivery failed:', error)
+    }
+  }
+
+  return NextResponse.json({
+    order: newOrder,
+    notification: {
+      emailConfigured: Boolean(smtpUser && smtpAppPassword && notificationEmail),
+      emailSent,
+    },
+  })
 }
 
 export async function PUT(request: Request) {

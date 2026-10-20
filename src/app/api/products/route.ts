@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { isAdminAuthenticated } from '@/lib/adminAuth'
 import { Product, readProducts, writeProducts } from '@/lib/productStore'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const products = await readProducts()
   return NextResponse.json(products)

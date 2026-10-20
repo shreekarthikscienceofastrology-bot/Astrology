@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import type { Product } from '@/lib/productStore'
@@ -24,6 +24,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [status, setStatus] = useState('')
 
   async function loadProducts() {
@@ -67,6 +68,33 @@ export default function AdminProductsPage() {
 
   function updateForm<T extends keyof typeof form>(field: T, value: typeof form[T]) {
     setForm((current) => ({ ...current, [field]: value }))
+  }
+
+  async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    setUploadingImage(true)
+    setStatus('Uploading product image...')
+
+    try {
+      const body = new FormData()
+      body.set('image', file)
+      const response = await fetch('/api/admin/product-image', { method: 'POST', body })
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to upload product image.')
+      }
+
+      updateForm('image', payload.url)
+      setStatus('Image uploaded. Complete the product details and save.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to upload product image.')
+    } finally {
+      setUploadingImage(false)
+    }
   }
 
   async function handleSave(event: FormEvent) {
@@ -211,17 +239,39 @@ export default function AdminProductsPage() {
               </select>
             </label>
 
-            <label className="text-sm font-semibold text-slate-700 md:col-span-2">
-              Product Image URL
-              <input
-                type="url"
-                value={form.image}
-                onChange={(event) => updateForm('image', event.target.value)}
-                className="mt-2 w-full rounded-xl border border-gold/30 bg-white px-4 py-3 text-slate-800 outline-none focus:border-gold"
-                placeholder="https://example.com/product-image.jpg"
-                required
-              />
-            </label>
+            <div className="grid gap-5 md:col-span-2 md:grid-cols-[minmax(0,1fr)_220px]">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700" htmlFor="product-image-upload">
+                  Product Image
+                </label>
+                <input
+                  id="product-image-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                  className="mt-2 block w-full cursor-pointer rounded-xl border border-gold/30 bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-gold file:px-4 file:py-2 file:font-semibold file:text-[#1f1b13]"
+                />
+                <p className="mt-2 text-xs text-slate-500">JPEG, PNG, or WebP, up to 5 MB.</p>
+                <label className="mt-4 block text-sm font-semibold text-slate-700">
+                  Or use an image URL
+                  <input
+                    type="url"
+                    value={form.image.startsWith('data:') ? '' : form.image}
+                    onChange={(event) => updateForm('image', event.target.value)}
+                    className="mt-2 w-full rounded-xl border border-gold/30 bg-white px-4 py-3 text-slate-800 outline-none focus:border-gold"
+                    placeholder="https://example.com/product-image.jpg"
+                  />
+                </label>
+              </div>
+              <div className="flex min-h-44 items-center justify-center overflow-hidden rounded-xl border border-dashed border-gold/40 bg-white">
+                {form.image ? (
+                  <img src={form.image} alt="Product image preview" className="h-44 w-full object-contain" />
+                ) : (
+                  <span className="px-4 text-center text-sm text-slate-500">Image preview appears here</span>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="mt-5">
@@ -251,7 +301,7 @@ export default function AdminProductsPage() {
           </div>
 
           <div className="mt-6 flex items-center gap-4">
-            <button type="submit" disabled={saving} className="rounded-lg bg-gold px-5 py-3 text-sm font-semibold text-[#1f1b13] hover:bg-[#d4a900] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500">
+            <button type="submit" disabled={saving || uploadingImage || !form.image} className="rounded-lg bg-gold px-5 py-3 text-sm font-semibold text-[#1f1b13] hover:bg-[#d4a900] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500">
               {saving ? 'Saving...' : form.id ? 'Update Product' : 'Add Product'}
             </button>
             {status && <span className="text-sm text-slate-600">{status}</span>}

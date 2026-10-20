@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import path from 'path'
+import { getSupabaseServerClient } from '@/lib/supabaseServer'
 
 export type ProductStatus = 'Available' | 'Out of Stock'
 
@@ -101,6 +102,27 @@ const defaultProducts: Product[] = [
 ]
 
 export async function readProducts(): Promise<Product[]> {
+  const supabase = getSupabaseServerClient()
+
+  if (supabase) {
+    const { data, error } = await supabase.from('products').select('id,payload').order('created_at')
+    if (error) throw new Error(`Unable to read products from Supabase: ${error.message}`)
+
+    if (data.length > 0) {
+      return data
+        .map((row) => row.payload as Product)
+        .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt))
+    }
+
+    const legacyProducts = await readProductsFromJson()
+    await writeProductsToSupabase(supabase, legacyProducts)
+    return legacyProducts
+  }
+
+  return readProductsFromJson()
+}
+
+async function readProductsFromJson(): Promise<Product[]> {
   try {
     const content = await fs.readFile(productPath, 'utf8')
     const parsed = JSON.parse(content) as Product[]
@@ -113,8 +135,42 @@ export async function readProducts(): Promise<Product[]> {
 }
 
 export async function writeProducts(products: Product[]) {
+  const supabase = getSupabaseServerClient()
+
+  if (supabase) {
+    await writeProductsToSupabase(supabase, products)
+    return
+  }
+
   await fs.mkdir(path.dirname(productPath), { recursive: true })
   await fs.writeFile(productPath, `${JSON.stringify(products, null, 2)}\n`, 'utf8')
+}
+
+async function writeProductsToSupabase(
+  supabase: NonNullable<ReturnType<typeof getSupabaseServerClient>>,
+  products: Product[],
+) {
+  if (products.length > 0) {
+    const { error } = await supabase.from('products').upsert(
+      products.map((product) => ({
+        id: product.id,
+        payload: product,
+        created_at: product.createdAt,
+      })),
+    )
+    if (error) throw new Error(`Unable to save products to Supabase: ${error.message}`)
+  }
+
+  const { data: existingProducts, error: readError } = await supabase.from('products').select('id')
+  if (readError) throw new Error(`Unable to reconcile products in Supabase: ${readError.message}`)
+
+  const retainedIds = new Set(products.map((product) => product.id))
+  const removedIds = existingProducts.map((product) => product.id).filter((id) => !retainedIds.has(id))
+
+  if (removedIds.length > 0) {
+    const { error } = await supabase.from('products').delete().in('id', removedIds)
+    if (error) throw new Error(`Unable to remove products from Supabase: ${error.message}`)
+  }
 }
 
 export async function getProductById(id: string) {
