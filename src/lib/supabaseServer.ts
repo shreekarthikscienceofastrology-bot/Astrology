@@ -12,11 +12,11 @@ export function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url && !serviceRoleKey) {
+  if (!serviceRoleKey) {
     return null
   }
 
-  if (!url || !serviceRoleKey) {
+  if (!url) {
     throw new Error('Set both NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to enable Supabase.')
   }
 

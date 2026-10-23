@@ -51,7 +51,7 @@ export const ZODIAC_SIGNS = [
 ] as const
 
 export const CONTACT_INFO = {
-  EMAIL: 'info@karthikastrology.com',
+  EMAIL: 'shreekarthikastrology@gmail.com',
   PHONE: '+91 96553 75550',
   ADDRESS: 'Your City, Country',
 } as const

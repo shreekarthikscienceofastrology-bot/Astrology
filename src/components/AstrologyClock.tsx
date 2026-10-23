@@ -98,7 +98,6 @@ export default function AstrologyClock() {
           </div>
 
           <div className="astrology-clock-face-wrap">
-            <div className="astrology-clock-time" aria-live="polite" suppressHydrationWarning>{timeLabel} IST</div>
             <svg className="astrology-clock-face" viewBox="0 0 100 100" role="img" aria-label={`Astrology clock showing ${timeLabel} Indian Standard Time`}>
               <circle cx="50" cy="50" r="47" className="clock-outer-ring" />
               <circle cx="50" cy="50" r="42" className="clock-zodiac-ring" />
@@ -131,6 +130,7 @@ export default function AstrologyClock() {
               <line x1="50" y1="53" x2="50" y2="18" className="clock-second-hand" transform={`rotate(${secondAngle} 50 50)`} />
               <circle cx="50" cy="50" r="2.1" className="clock-center" />
             </svg>
+            <div className="astrology-clock-time" aria-live="polite" suppressHydrationWarning>{timeLabel} IST</div>
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@ import { getSupabaseServerClient } from '@/lib/supabaseServer'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const maxLocalImageSize = 4 * 1024 * 1024
+const maxLocalImageSize = 5 * 1024 * 1024
 const allowedTypes = new Map([
   ['image/jpeg', 'jpg'],
   ['image/png', 'png'],
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   if (request.headers.get('content-type')?.includes('application/json')) {
     if (!supabase) {
-      return NextResponse.json({ error: 'Supabase server credentials are not configured.' }, { status: 503 })
+      return NextResponse.json({ storage: 'local' })
     }
 
     const payload = await request.json()
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     const { data: publicUrl } = supabase.storage.from('product-images').getPublicUrl(data.path)
-    return NextResponse.json({ path: data.path, token: data.token, url: publicUrl.publicUrl })
+    return NextResponse.json({ storage: 'supabase', path: data.path, token: data.token, url: publicUrl.publicUrl })
   }
 
   const formData = await request.formData()
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   }
 
   if (image.size <= 0 || image.size > maxLocalImageSize) {
-    return NextResponse.json({ error: 'Local image uploads must be smaller than 4 MB.' }, { status: 400 })
+    return NextResponse.json({ error: 'Local image uploads must be 5 MB or smaller.' }, { status: 400 })
   }
 
   const filename = `${randomUUID()}.${extension}`
@@ -69,5 +69,5 @@ export async function POST(request: Request) {
   await fs.mkdir(uploadDirectory, { recursive: true })
   await fs.writeFile(path.join(uploadDirectory, filename), bytes)
 
-  return NextResponse.json({ url: `/images/products/${filename}` })
+  return NextResponse.json({ url: `/api/product-images/${filename}` })
 }

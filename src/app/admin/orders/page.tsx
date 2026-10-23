@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import type { Order } from '@/lib/orderStore'
+import AdminNavigation from '@/components/AdminNavigation'
 
 const statuses = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
 
@@ -63,6 +64,7 @@ export default function AdminOrdersPage() {
   return (
     <main className="min-h-screen bg-white px-4 pb-20 pt-32">
       <div className="mx-auto max-w-6xl">
+        <AdminNavigation />
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#8a5e00]">Admin</p>
           <h1 className="mt-2 text-4xl font-bold text-[#111827]">Order Management</h1>

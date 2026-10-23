@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import type { Product } from '@/lib/productStore'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
+import AdminNavigation from '@/components/AdminNavigation'
 
 const emptyProduct = {
   id: '',
@@ -16,6 +17,30 @@ const emptyProduct = {
   status: 'Available',
   image: '',
   specifications: [''],
+}
+
+async function uploadImageLocally(file: File): Promise<string> {
+  const body = new FormData()
+  body.set('image', file)
+  const response = await fetch('/api/admin/product-image', { method: 'POST', body })
+  const responseText = await response.text()
+  let payload: { url?: string; error?: string } = {}
+
+  try {
+    payload = responseText ? JSON.parse(responseText) as typeof payload : {}
+  } catch {
+    throw new Error(`Image upload failed (${response.status}): ${responseText.slice(0, 180)}`)
+  }
+
+  if (!response.ok) {
+    throw new Error(payload.error || `Unable to upload product image (${response.status}).`)
+  }
+
+  if (!payload.url) {
+    throw new Error('Image upload completed without returning an image URL.')
+  }
+
+  return payload.url
 }
 
 export default function AdminProductsPage() {
@@ -89,36 +114,36 @@ export default function AdminProductsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contentType: file.type }),
         })
-        const payload = await response.json().catch(() => ({}))
 
         if (!response.ok) {
+          const payload = await response.json() as { error?: string }
           throw new Error(payload.error || `Unable to prepare image upload (${response.status}).`)
         }
 
-        const { error } = await supabase.storage
-          .from('product-images')
-          .uploadToSignedUrl(payload.path, payload.token, file, { contentType: file.type })
+        const payload = await response.json() as {
+          storage: 'local' | 'supabase'
+          path?: string
+          token?: string
+          url?: string
+          error?: string
+        }
 
-        if (error) throw new Error(`Image upload failed: ${error.message}`)
-        imageUrl = payload.url
+        if (payload.storage === 'local') {
+          imageUrl = await uploadImageLocally(file)
+        } else {
+          if (!payload.path || !payload.token || !payload.url) {
+            throw new Error('Supabase did not return the required image upload details.')
+          }
+
+          const { error } = await supabase.storage
+            .from('product-images')
+            .uploadToSignedUrl(payload.path, payload.token, file, { contentType: file.type })
+
+          if (error) throw new Error(`Image upload failed: ${error.message}`)
+          imageUrl = payload.url
+        }
       } else {
-        const body = new FormData()
-        body.set('image', file)
-        const response = await fetch('/api/admin/product-image', { method: 'POST', body })
-        const responseText = await response.text()
-        let payload: { url?: string; error?: string } = {}
-
-        try {
-          payload = JSON.parse(responseText) as typeof payload
-        } catch {
-          throw new Error(`Image upload failed (${response.status}): ${responseText.slice(0, 180)}`)
-        }
-
-        if (!response.ok) {
-          throw new Error(payload.error || `Unable to upload product image (${response.status}).`)
-        }
-
-        imageUrl = payload.url || ''
+        imageUrl = await uploadImageLocally(file)
       }
 
       if (!imageUrl) throw new Error('Image upload completed without returning an image URL.')
@@ -213,6 +238,7 @@ export default function AdminProductsPage() {
   return (
     <main className="min-h-screen bg-white px-4 pb-20 pt-32">
       <div className="mx-auto max-w-6xl">
+        <AdminNavigation />
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#8a5e00]">Admin</p>

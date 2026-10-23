@@ -15,7 +15,7 @@ html {
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #ffffff;
-  color: #1f2937;
+  color: #352500;
 }
 
 .text-gray-300,
@@ -28,58 +28,63 @@ body {
   transition: color 0.2s ease;
 }
 
-.text-gray-300 { color: #475569 !important; }
-.text-gray-400 { color: #64748b !important; }
-.text-gray-500 { color: #475569 !important; }
-.text-gray-600 { color: #334155 !important; }
-.text-gray-700 { color: #1f2937 !important; }
-.text-gray-100 { color: #1f2937 !important; }
-.text-gray-200 { color: #334155 !important; }
+.text-gray-300 { color: #493500 !important; }
+.text-gray-400 { color: #725000 !important; }
+.text-gray-500 { color: #493500 !important; }
+.text-gray-600 { color: #352500 !important; }
+.text-gray-700 { color: #352500 !important; }
+.text-gray-100 { color: #352500 !important; }
+.text-gray-200 { color: #493500 !important; }
 
 /* Custom components */
 :root {
-  --soft-gold: #ffd700;
+  --theme-gradient: linear-gradient(90deg, #493500, #725000, #927000, #352500);
+  --theme-dark-gold: #493500;
+  --theme-gold: #725000;
+  --theme-light-gold: #927000;
+  --theme-deep: #352500;
 }
 
 .text-gold {
-  color: var(--soft-gold);
+  color: #725000;
 }
 
 .text-\[\#8a5e00\],
 .text-\[\#a67400\],
 .text-\[\#A67400\] {
-  color: var(--soft-gold) !important;
+  color: #725000 !important;
 }
 
 .hover\:text-\[\#8a5e00\]:hover,
 .hover\:text-\[\#724d00\]:hover {
-  color: var(--soft-gold) !important;
+  color: #493500 !important;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #ffd700 0%, #ffd700 100%);
+  background: linear-gradient(90deg, #493500, #725000, #927000, #352500);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .card-glass {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  box-shadow: 0 12px 35px rgba(255, 215, 0, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(114, 80, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(73, 53, 0, 0.06);
 }
 
 .service-card {
-  @apply p-6 rounded-lg card-glass hover:shadow-2xl hover:shadow-gold/40 transition-all duration-300 transform hover:-translate-y-2;
+  @apply p-6 rounded-2xl bg-white border border-[#725000]/20 hover:border-[#725000]/50 hover:shadow-xl hover:shadow-[#493500]/10 transition-all duration-300 transform hover:-translate-y-1.5;
 }
 
 .btn-gold {
-  @apply px-6 py-3 bg-gold text-white font-semibold rounded-lg hover:bg-[#d4a900] transition-all duration-300 transform hover:scale-105;
+  background: linear-gradient(90deg, #493500, #725000, #927000, #352500);
+  color: #ffffff;
+  @apply px-6 py-3 font-semibold rounded-lg shadow-md shadow-[#493500]/25 hover:opacity-95 transition-all duration-300 transform hover:scale-105;
 }
 
 .btn-outline {
-  @apply px-6 py-3 border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-white transition-all duration-300;
+  @apply px-6 py-3 border-2 border-[#725000] text-[#493500] font-semibold rounded-lg hover:bg-[#725000] hover:text-white transition-all duration-300;
 }
 
 .astrology-clock-section {
@@ -104,9 +109,9 @@ body {
 .astrology-clock-eyebrow { margin-bottom: .75rem; color: #f6c94e; font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 .astrology-clock-copy h2 { margin-bottom: .75rem; color: #fff8e5; font-family: Georgia, serif; font-size: clamp(2rem, 5vw, 3.75rem); line-height: 1.05; }
 .astrology-clock-date { color: #f6c94e; font-size: 1rem; }
-.astrology-clock-face-wrap { position: relative; width: min(100%, 440px); margin: auto; }
+.astrology-clock-face-wrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: min(100%, 440px); margin: auto; }
 .astrology-clock-face { display: block; width: 100%; height: auto; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .35)); }
-.astrology-clock-time { position: absolute; right: 0; bottom: 8%; left: 0; z-index: 1; color: #fff8e5; font-family: Georgia, serif; font-size: clamp(.9rem, 3vw, 1.4rem); font-weight: 700; text-align: center; letter-spacing: .05em; text-shadow: 0 2px 8px rgba(0, 0, 0, .8); }
+.astrology-clock-time { color: #fff8e5; font-family: Georgia, serif; font-size: clamp(.9rem, 3vw, 1.4rem); font-weight: 700; text-align: center; letter-spacing: .05em; text-shadow: 0 2px 8px rgba(0, 0, 0, .8); }
 .clock-outer-ring { fill: #292136; stroke: #f6c94e; stroke-width: .8; }
 .clock-zodiac-ring { fill: #332944; stroke: #c79a30; stroke-width: .3; }
 .clock-inner-ring { fill: #191522; stroke: #c79a30; stroke-width: .35; }

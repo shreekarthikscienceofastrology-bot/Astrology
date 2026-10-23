@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react'
 import type { MonthlyPrediction } from '@/lib/monthlyPrediction'
+import AdminNavigation from '@/components/AdminNavigation'
 
 const emptyPrediction: MonthlyPrediction = {
   month: '',
@@ -70,25 +71,7 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-[#fff8e5] px-4 pt-40 pb-20">
       <div className="max-w-6xl mx-auto space-y-8">
-        <div className="grid gap-4 md:grid-cols-3">
-          <a href="/update/products" className="rounded-2xl border border-gold/40 bg-white p-5 shadow-[0_16px_40px_rgba(212,175,55,0.08)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(212,175,55,0.12)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8a5e00]">Manage</p>
-            <h2 className="mt-3 text-2xl font-bold text-[#111827]">Products</h2>
-            <p className="mt-2 text-sm text-slate-600">Add, edit, and remove gemstone products.</p>
-          </a>
-
-          <a href="/update/orders" className="rounded-2xl border border-gold/40 bg-white p-5 shadow-[0_16px_40px_rgba(212,175,55,0.08)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(212,175,55,0.12)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8a5e00]">Manage</p>
-            <h2 className="mt-3 text-2xl font-bold text-[#111827]">Orders</h2>
-            <p className="mt-2 text-sm text-slate-600">Track customer requests and update order status.</p>
-          </a>
-
-          <div className="rounded-2xl border border-gold/40 bg-[#fffaf0] p-5 shadow-[0_16px_40px_rgba(212,175,55,0.08)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8a5e00]">Content</p>
-            <h2 className="mt-3 text-2xl font-bold text-[#111827]">Prediction</h2>
-            <p className="mt-2 text-sm text-slate-600">Update the monthly prediction panel on the website.</p>
-          </div>
-        </div>
+        <AdminNavigation />
 
         <form onSubmit={save} className="card-glass mx-auto rounded-lg p-8">
           <h1 className="text-3xl font-bold gradient-text mb-8">Edit Monthly Prediction</h1>

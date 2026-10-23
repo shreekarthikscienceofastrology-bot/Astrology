@@ -22,6 +22,7 @@ export default function Home() {
             alt="Shree Karthik Science of Astrology Logo"
             width={120}
             height={120}
+            priority
             className="mx-auto mb-8 md:mb-8 rounded-full border-4 border-[#FEBD14]/30 shadow-lg"
           />
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 gradient-text leading-tight">
@@ -367,10 +368,10 @@ export default function Home() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <a href="mailto:info@karthikastrology.com" className="card-glass p-6 rounded-lg text-center hover:shadow-xl transition-shadow">
+            <a href="mailto:shreekarthikastrology@gmail.com" className="card-glass p-6 rounded-lg text-center hover:shadow-xl transition-shadow flex flex-col items-center justify-center">
               <p className="text-4xl mb-4">📧</p>
               <h3 className="text-xl font-semibold text-gold mb-2">Email</h3>
-              <p className="text-gray-300">shreekarthikscienceofastrology@gmail.com</p>
+              <p className="text-gray-300 text-center">shreekarthikscienceofastrology@gmail.com</p>
             </a>
             <a href="https://wa.me/919655375550?text=Hello%20Shree%20Karthik%20Science%20of%20Astrology" target="_blank" rel="noopener noreferrer" className="card-glass p-6 rounded-lg text-center hover:shadow-xl transition-shadow">
               <p className="text-4xl mb-4">📱</p>

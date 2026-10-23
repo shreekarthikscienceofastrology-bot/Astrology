@@ -39,7 +39,7 @@ export default function Footer() {
 
           <div>
             <h4 className="mb-4 text-lg font-semibold text-[#8a5e00]">Contact Us</h4>
-            <p className="mb-2 text-sm text-slate-600">📧 Email: info@karthikastrology.com</p>
+            <p className="mb-2 text-sm text-slate-600">📧 Email: shreekarthikastrology@gmail.com</p>
             <a href={`${WHATSAPP_BASE_URL}?text=${encodeURIComponent('Hello Shree Karthik Science of Astrology')}`} target="_blank" rel="noopener noreferrer" className="mb-2 block text-sm text-slate-600 transition hover:text-[#8a5e00]">📱 WhatsApp: +91 96553 75550</a>
             <p className="text-sm text-slate-600">📍 Location: Coimbatore, Tamil Nadu</p>
           </div>

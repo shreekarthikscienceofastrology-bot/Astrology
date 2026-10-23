@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -114,7 +115,13 @@ export default function ProductOrderPage({ params }: { params: { id: string } })
           <div className="rounded-2xl border border-gold/20 bg-[#fffaf0] p-5">
             <div className="mb-4 overflow-hidden rounded-xl">
               <div className="relative h-60 w-full">
-                <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
               </div>
             </div>
             <h2 className="text-2xl font-bold text-[#111827]">{product.name}</h2>
